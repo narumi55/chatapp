@@ -1,0 +1,83 @@
+/* 全体のスタイル */
+.setting4-body {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* ボタンスタイル */
+.setting4-button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  border-color: black;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* ボタンhover時 */
+.setting4-button:hover {
+  background-color: gray;
+}
+
+/* スイッチのラベル */
+.setting4-switch_label {
+  position: relative;
+  display: inline-flex; /* 一行で表示 */
+  align-items: center;
+}
+
+/* チェックボックス */
+.setting4-switch_input {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* スイッチの基本部分 */
+.setting4-base {
+  width: 56px;
+  border-radius: 15px;
+  height: 32px;
+  background-color: #ddd;
+}
+
+/* スイッチのタイトル */
+.setting4-title {
+  margin-left: 4px;
+}
+
+/* スイッチ */
+.setting4-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+/* チェックされているときの円の動き */
+.setting4-switch_input:checked ~ .setting4-circle {
+  transform: translateX(100%);
+  background-color: blue;
+}
+
+/* 円のスタイル */
+.setting4-circle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: white;
+  transition: 0.5s;
+}
+
+/* チェックされているときのベースの色変更 */
+.setting4-switch_input:checked ~ .setting4-base {
+  background-color: rgb(219, 234, 254);
+  transition: 0.5s;
+}
