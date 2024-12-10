@@ -78,5 +78,6 @@ window.openSinglePractice = function () {
     window.location.href = '/daihugou4';
 };
 
-
-
+window.openMultiplePractice = function () {
+    window.location.href = '/daihugou';
+};

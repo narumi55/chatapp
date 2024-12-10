@@ -15,7 +15,7 @@
     </header>
     <main>
         <button class="main-button" onclick="openSinglePractice()">一人で練習</button><br><br>
-        <button class="main-button" onclick="">友達と対戦</button><br><br>
+        <button class="main-button" onclick="openMultiplePractice()">友達と対戦</button><br><br>
         <button class="main-button" onclick="">ルールを覚える</button><br><br>
         <button class="main-button" onclick="openRulesSettings()">ルール設定</button>
     </main>
