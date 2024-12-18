@@ -32,5 +32,19 @@ class DataController extends Controller
         }
     }
 
+    public function updateGame(Request $request)
+    {
+        try {
+            // GameServiceのturnset関数を呼び出してデータを処理
+            $result = $this->gameService->turnset($playerIndex, $players, $trash);
+        } catch (\Exception $e) {
+            // エラーハンドリング
+            Log::error('ゲームデータ更新中にエラーが発生:', [
+                'error' => $e->getMessage(),
+                'data'  => $validated,
+            ]);
+        }
+    }
+
 }
 

@@ -39,4 +39,4 @@ Route::get('/get-switch-state', [SwitchController::class, 'getSwitchState'])->na
 Route::match(['get', 'post'], '/initialize-game', [DataController::class, 'initializeGame'])->name('initialize.game');
 Route::post('/game-control/user-turn', [DataController::class, 'userTurn'])->name('game.control.user.turn');
 Route::post('/game-control', [DataController::class, 'gameControl'])->name('game.control');
-
+Route::post('/updateGame', [DataController::class, 'updateGame'])->name('game.update');
