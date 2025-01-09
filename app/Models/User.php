@@ -12,6 +12,22 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'toggles' => 'array', // ← toggles カラムを自動で配列としてキャスト
+    ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($user) {
+            // まだ pin がセットされていない場合のみ、生成して格納
+            if (empty($user->pin)) {
+                $user->pin = sprintf('%04d', random_int(0, 9999));
+            }
+        });
+    }
     /**
      * The attributes that are mass assignable.
      *

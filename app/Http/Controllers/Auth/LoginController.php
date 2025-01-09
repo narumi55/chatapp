@@ -21,6 +21,7 @@ class LoginController extends Controller
 
     use AuthenticatesUsers;
 
+    protected $redirectTo = '/';
     /**
      * Where to redirect users after login.
      *
@@ -36,21 +37,5 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
-    }
-
-    /**
-     * Log the user in and close the modal window if successful.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
-    public function authenticated(Request $request, $user)
-    {
-        // ログイン成功後にモーダルを閉じるためのJavaScriptコードを返す
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Login successful',
-            'action' => 'closeModal' // これをフロントエンドで受け取り、モーダルを閉じる
-        ]);
     }
 }

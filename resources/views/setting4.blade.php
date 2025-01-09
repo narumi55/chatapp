@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+<meta name="csrf-token" content="{{ csrf_token() }}">
     <title>ルール設定</title>
     <link rel="stylesheet" href="{{ asset('css/setting4.css') }}">
     @vite('resources/css/setting4.css')

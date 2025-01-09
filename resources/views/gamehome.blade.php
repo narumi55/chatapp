@@ -10,7 +10,17 @@
     <header>
         <h1>魔法少女と大富豪</h1>
         <div class="header-buttons">
-            <button class="header-button" onclick="openAccountModal()">アカウント</button>
+            @if(Auth::check())
+                <!-- ログイン済みの場合：ユーザー名とログアウトボタンを表示 -->
+                <span class="user-name">{{ Auth::user()->name }}</span>
+                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="header-button">ログアウト</button>
+                </form>
+            @else
+                <!-- 未ログインの場合：アカウントボタンを表示 -->
+                <button class="header-button" onclick="openAccountModal()">アカウント</button>
+            @endif
         </div>
     </header>
     <main>
@@ -20,40 +30,35 @@
         <button class="main-button" onclick="openRulesSettings()">ルール設定</button>
     </main>
 
-    <!-- アカウントモーダルウィンドウ -->
+    <!-- アカウントモーダルウィンドウ (未ログイン時のみ使用) -->
+    @if(!Auth::check())
     <div id="accountModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeAccountModal()">&times;</span>
             <h2>アカウント情報</h2>
             <div id="account-page" class="account-page-container">
                 <div class="account-buttons">
-                    <button id="login-btn" class="btn" onclick="openloginModal()">ログイン</button>
-                    <button id="register-btn" class="btn" onclick="openregisterModal()">登録</button>
+                    <button onclick="openLoginPage()">ログイン</button>
+                    <button onclick="openRegisterPage()">登録</button>
                 </div>
             </div>
         </div>
     </div>
+    @endif
 
-
-    <!-- ログインモーダルウィンドウ -->
-    <div id="loginModal" class="modal">
+    @if(Auth::check())
+    <!-- 友達と対戦モーダルウィンドウ -->
+    <div id="multiplayerModal" class="modal">
         <div class="modal-content">
-            <span class="close" onclick="closeloginModal()">&times;</span>
-            <h2>ログイン</h2>
-            
-            @include('auth.login') <!-- auth/login.blade.php を読み込む -->
+            <span class="close" onclick="closeMultiplePractice()">&times;</span>
+            <h2>マルチプレイ</h2>
+            <div class="multiplayer-buttons">
+                <button onclick="createRoom()">部屋を立てる</button>
+                <button onclick="joinRoom()">部屋に参加する</button>
+            </div>
         </div>
     </div>
-
-    <!-- 登録モーダルウィンドウ -->
-    <div id="registerModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeregisterModal()">&times;</span>
-            <h2>登録</h2>
-            
-            @include('auth.register') <!-- auth/register.blade.php を読み込む -->
-        </div>
-    </div>
+    @endif
 
     <!-- ルール設定モーダルウィンドウ -->
     <div id="rulesModal" class="modal">

@@ -41,15 +41,8 @@ function toggleSwitch(checkbox, title, key) {
     });
 }
 
-// 状態を復元する関数
 function restoreSwitchState(checkbox, title, key) {
-    const savedState = localStorage.getItem(key);
-    if (savedState) {
-        checkbox.checked = savedState === 'on';
-        title.textContent = savedState === 'on' ? 'ON' : 'OFF';
-    }
-
-    // 初期状態をデータベースから取得する処理を追加
+    // 1. DB からの値を取得 (最初に fetch する)
     fetch('/get-switch-state', {
         method: 'GET',
         headers: {
@@ -58,10 +51,34 @@ function restoreSwitchState(checkbox, title, key) {
     })
     .then(response => response.json())
     .then(data => {
+        // もし DB にキーがあればそちらを最優先で反映
         if (data[key]) {
             checkbox.checked = data[key] === 'on';
             title.textContent = data[key] === 'on' ? 'ON' : 'OFF';
+        } else {
+            // もし DB にキーがなければ localStorage から復元
+            const savedState = localStorage.getItem(key);
+            if (savedState) {
+                checkbox.checked = savedState === 'on';
+                title.textContent = savedState === 'on' ? 'ON' : 'OFF';
+            } else {
+                // どちらにもなければ OFF
+                checkbox.checked = false;
+                title.textContent = 'OFF';
+            }
         }
+    })
+    .catch(err => {
+        // エラーの場合、localStorage を fallback で使う
+        const savedState = localStorage.getItem(key);
+        if (savedState) {
+            checkbox.checked = savedState === 'on';
+            title.textContent = savedState === 'on' ? 'ON' : 'OFF';
+        } else {
+            checkbox.checked = false;
+            title.textContent = 'OFF';
+        }
+        console.error(err);
     });
 }
 

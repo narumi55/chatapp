@@ -8,7 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class SwitchState extends Model
 {
     use HasFactory;
-
-    protected $fillable = ['key', 'state']; // 'state' を含める
+    
+    protected $fillable = [
+        'user_id',
+        'key',
+        'state',
+    ];
 }
 

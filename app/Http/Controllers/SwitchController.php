@@ -1,33 +1,43 @@
 <?php
 
-// app/Http/Controllers/SwitchController.php
-
 namespace App\Http\Controllers;
 
-use App\Models\SwitchState;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SwitchController extends Controller
 {
-    // トグルの状態を保存
-    public function saveSwitchState(Request $request)
+    public function get(Request $request)
     {
-        // 送信されたデータを取得
-        $key = $request->input('key');
-        $state = $request->input('state') === 'on';
+        // ログインユーザを取得
+        $user = Auth::user();
 
-        // データベースに保存
-        SwitchState::updateOrCreate(
-            ['key' => $key], 
-            ['state' => $state]
-        );
-
-        return response()->json(['success' => true]);
+        // データベースから toggles カラムの内容を返す
+        // 例: { "switch0State": "off", "switch1State": "off", ... }
+        return response()->json($user->toggles ?? []);
     }
 
-    public function getSwitchState(Request $request)
+    public function save(Request $request)
     {
-        $states = SwitchState::pluck('state', 'key')->toArray(); // すべての状態を取得
-        return response()->json($states);
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // 送られてくる { key: 'switch0State', state: 'on' } 等を取得
+        $key   = $request->input('key');
+        $state = $request->input('state');
+
+        // DB 上の toggles カラムの中身を取得 (配列として取得可能)
+        $toggles = $user->toggles ?? [];
+
+        // 該当スイッチの状態を更新
+        $toggles[$key] = $state;
+
+        // 更新して保存
+        $user->toggles = $toggles;
+        $user->save();
+
+        return response()->json(['message' => 'OK']);
     }
 }

@@ -26,6 +26,24 @@ window.closeAccountModal = function () {
     document.getElementById("accountModal").style.display = "none";
 };
 
+// 友達と対戦モーダルを開く関数
+window.openMultiplePractice = function () {
+    document.getElementById("multiplayerModal").style.display = "block";
+};
+
+// 友達と対戦モーダルを閉じる関数
+window.closeMultiplePractice = function () {
+    document.getElementById("multiplayerModal").style.display = "none";
+};
+
+// 友達と対戦モーダルの外側クリックで閉じる
+window.addEventListener("click", function (event) {
+    var multiplayerModal = document.getElementById("multiplayerModal");
+    if (event.target === multiplayerModal) {
+        window.closeMultiplePractice();
+    }
+});
+
 // アカウントモーダルの外側クリックで閉じる
 window.addEventListener("click", function (event) {
     var accountModal = document.getElementById("accountModal");
@@ -34,50 +52,23 @@ window.addEventListener("click", function (event) {
     }
 });
 
-
-// ログインモーダルを開く関数
-window.openloginModal = function () {
-    document.getElementById("loginModal").style.display = "block";
-};
-
-// ログインモーダルを閉じる関数
-window.closeloginModal = function () {
-    document.getElementById("loginModal").style.display = "none";
-};
-
-
-
-// ログインモーダルの外側クリックで閉じる
-window.addEventListener("click", function (event) {
-    var loginModal = document.getElementById("loginModal");
-    if (event.target === loginModal) {
-        window.closeloginModal();
-    }
-});
-
-// 登録モーダルを開く関数
-window.openregisterModal = function () {
-    document.getElementById("registerModal").style.display = "block";
-};
-
-// 登録モーダルを閉じる関数
-window.closeregisterModal = function () {
-    document.getElementById("registerModal").style.display = "none";
-};
-
-// 登録モーダルの外側クリックで閉じる
-window.addEventListener("click", function (event) {
-    var registerModal = document.getElementById("registerModal");
-    if (event.target === registerModal) {
-        window.closeregisterModal();
-    }
-});
-
 // 一人で練習のページへ遷移
 window.openSinglePractice = function () {
     window.location.href = '/daihugou4';
 };
 
-window.openMultiplePractice = function () {
-    window.location.href = '/daihugou';
+window.openLoginPage = function() {
+    window.location.href = '/auth/login';
+};
+
+window.openRegisterPage = function() {
+    window.location.href = '/auth/register';
+};
+
+window.createRoom = function() {
+    window.location.href = '/host';
+};
+
+window.joinRoom = function() {
+    window.location.href = '/guest';
 };
