@@ -10,6 +10,7 @@ use App\Http\Controllers\RoomController;
 
 Route::post('/game-control/user-turn', [DataController::class, 'userTurn']);
 Route::post('/game-control/initialize-game', [DataController::class, 'initializeGame']);
+Route::post('/user-turn', [DataController::class, 'userTurn'])->name('game.userTurn');
 
 
 Route::view('/auth/login', 'auth.login')->name('login');
@@ -24,7 +25,7 @@ Route::get('/', function () {
 
 // その他のビューへのルート
 Route::view('/daihugou4', 'daihugou4');
-Route::view('/daihugou', 'daihugou');
+Route::view('/daihugou', 'daihugou')->name('daihugou')->middleware('auth');
 Route::view('/host', 'host');
 Route::view('/guest', 'guest');
 Route::get('/guest2', [RoomController::class, 'guest2'])->name('rooms.guest2');
@@ -39,11 +40,6 @@ Route::group(['middleware' => ['auth']], function() {
     Route::post('/save-switch-state', [SwitchController::class, 'save'])->name('save.switch.state');
     Route::get('/get-switch-state', [SwitchController::class, 'get'])->name('get.switch.state');
 });
-// ゲーム初期化と制御のルート
-Route::match(['get', 'post'], '/initialize-game', [DataController::class, 'initializeGame'])->name('initialize.game');
-Route::post('/game-control/user-turn', [DataController::class, 'userTurn'])->name('game.control.user.turn');
-Route::post('/game-control', [DataController::class, 'gameControl'])->name('game.control');
-Route::post('/updateGame', [DataController::class, 'updateGame'])->name('game.update');
 
 Route::post('/rooms/create', [RoomController::class, 'createRoom'])->name('rooms.create');
 Route::post('/rooms/join', [RoomController::class, 'joinRoom'])->name('rooms.join');
@@ -54,3 +50,12 @@ Route::get('/guest2/{room}', [RoomController::class, 'guest2'])->name('rooms.gue
 
 Route::post('/join-room', [RoomController::class, 'joinRoom'])->name('rooms.join');
 Route::get('/api/room/{pin}', [RoomController::class, 'getRoomData'])->name('api.room.data');
+
+Route::post('/rooms/start-game', [RoomController::class, 'startGame'])
+    ->name('rooms.startGame');
+
+Route::get('/api/room/{pin}/started', [RoomController::class, 'checkStarted'])
+    ->name('rooms.checkStarted');
+
+Route::get('/rooms/daihugou', [RoomController::class, 'daihugou'])
+    ->name('rooms.daihugou');

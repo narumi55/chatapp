@@ -25,6 +25,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            if (data.started) {
+                const redirectUrl = `/daihugou?pin=${encodeURIComponent(pin)}&id=${encodeURIComponent(data.guest_user_id)}`;
+
+                // ブラウザをリダイレクト
+                window.location.href = redirectUrl;
+            }
+
             // ホストとゲストの名前を更新
             if (hostNameElement) {
                 hostNameElement.textContent = data.host_user_name || '未設定';
@@ -43,6 +50,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // 5秒ごとにデータを更新
     setInterval(fetchRoomData, 5000);
+    
 });
 
 

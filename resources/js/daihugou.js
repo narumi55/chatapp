@@ -6,17 +6,17 @@ var cardMoved = false;
 var currentPlayer = 0; 
 var passcount = 0;
 var players = [];
-var player = [
-    { name: "user", level: 0 },
-    { name: "cpu1", level: 0 },
-    { name: "cpu2", level: 0 },
-    { name: "cpu3", level: 0 }
-];
+var player = [];
 
 var gemelevel = ["大富豪", "富豪", "貧民", "大貧民"];
 var gemerank = 1;
 var round = 0;
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+const currentUrl = window.location.href;
+const urlParams = new URLSearchParams(new URL(currentUrl).search);
+const localPin = urlParams.get('pin');
+const localUserId = urlParams.get('id');
+console.log(`localPin=${localPin}, localUserId=${localUserId}`);
 
 //ローカルルールのonoff
 var kakumei = false;
@@ -136,10 +136,25 @@ function drawCard(card, x, y, faceUp, rotate) {
 }
 
 let intervalId;
+async function updateGameBoardLoop() {
+    try {
+        await updateGameBoard();  // ここで fetch 等の処理
+    } catch (error) {
+        console.error('Error:', error);
+    }
+    // 処理が終わった後に次の呼び出しを3秒後にセット
+    setTimeout(updateGameBoardLoop, 3000);
+}
+window.onload = function() {
+    init();
+  };
+function init() {
+    updateGameBoardLoop();
+}
 async function updateGameBoard() {
     try {
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        const response = await fetch('/initialize-game', {
+        const response = await fetch('/user-turn', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -154,6 +169,12 @@ async function updateGameBoard() {
 
         const data = await response.json();
         console.log('レスポンスデータ:', data);
+
+        if (localPin !== data.original.pin) {
+            console.log(`PIN不一致: localPin=${localPin}, serverPin=${data.pin}`);
+            return;  // 処理を中断
+        }
+
         clearInterval(intervalId);
 
         if (data.gameOver) {
@@ -163,24 +184,25 @@ async function updateGameBoard() {
         }
 
         // サーバーからのデータを基に画面を描画
-        const playersData = data.players;
-        const currentPlayerIndex = data.currentPlayer;
-        const trash = data.trash || []; 
-        const kakumei = data.kakumei;
-        const suitsibari = data.suitsibari;
-        const ranksibari = data.ranksibari;
-        const kiri = data.kiri;
-        const bakku = data.bakku;
-        const kaesi = data.kaesi;
-        const sukippu = data.sukippu;
-        const watasi = data.watasi;
-        const sute = data.sute;
-        const bonnba = data.bonnba;
+        const players = data.original.players;
+        const playerIndex = data.original.playerIndex;
+        const trash = data.original.trash; 
+        const kakumei = data.original.kakumei;
+        const suitsibari = data.original.suitsibari;
+        const ranksibari = data.original.ranksibari;
+        const kiri = data.original.kiri;
+        const bakku = data.original.bakku;
+        const kaesi = data.original.kaesi;
+        const sukippu = data.original.sukippu;
+        const watasi = data.original.watasi;
+        const sute = data.original.sute;
+        const bonnba = data.original.bonnba;
 
-        if(currentPlayerIndex === 0){
-            userTurn(currentPlayerIndex, playersData, trash, kakumei, suitsibari, ranksibari, kiri, bakku, kaesi, sukippu, watasi, sute, bonnba);
+        const currentPlayerId = players[playerIndex].id;
+        if(currentPlayerId == localUserId){
+            userTurn(playerIndex, players, trash, kakumei, suitsibari, ranksibari, kiri, bakku, kaesi, sukippu, watasi, sute, bonnba);
         } else {
-            ShowBan(currentPlayerIndex, playersData, trash);
+            ShowBan(playerIndex, players, trash);
         }
         
     } catch (error) {
@@ -200,9 +222,7 @@ function ShowBan(playerIndex, players, trash) {
     players.forEach((player, index) => {
         const positions = [
             { x: 58, y: 857, levelY: 880, imageId: 'p1' }, // ユーザー
-            { x: 58, y: 174, levelY: 197, imageId: 'p2' }, // CPU1
             { x: 772, y: 58, levelY: 81, imageId: 'p2' },  // CPU2
-            { x: 772, y: 741, levelY: 764, imageId: 'p2' } // CPU3
         ];
 
         const pos = positions[index];
@@ -233,16 +253,10 @@ function ShowBan(playerIndex, players, trash) {
             // ユーザーの手札
             // 参考コードと同様に、水平方向に右へずらしながら描画
             drawHand(player.hand, { xStart: 126, yStart: 809, xStep: 36, faceUp: true, rotate: false });
-        } else if (player.name === "cpu1") {
-            // CPU1はそのまま
-            drawHand(player.hand, { xStart: 21, yStart: 229, yStep: 28, faceUp: false, rotate: true });
         } else if (player.name === "cpu2") {
             // CPU2の手札
             // 参考コードではx=633からスタートし、xStep:-36で左方向へカードを並べていた
             drawHand(player.hand, { xStart: 633, yStart: 10, xStep: -36, faceUp: false, rotate: false });
-        } else if (player.name === "cpu3") {
-            // CPU3はそのまま
-            drawHand(player.hand, { xStart: 736, yStart: 589, yStep: -28, faceUp: false, rotate: true });
         }
     });
 
@@ -686,7 +700,7 @@ function mousePress2(event, playerIndex, players, trash, kakumei, suitsibari, ra
 
 //passを処理する関数
 async function pass(playerIndex, players, trash, kakumei, suitsibari, ranksibari, kiri, bakku, kaesi, sukippu, watasi, sute, bonnba) {
-    currentPlayer = (currentPlayer + 1) % players.length; 
+    playerIndex = (playerIndex + 1) % players.length; 
     passcount ++;
     if(passcount > players.length - 2){
         trash = [];
@@ -746,26 +760,3 @@ async function sendGameData(playerIndex, players, trash, kakumei, suitsibari, ra
         console.error('データ送信中にエラーが発生しました:', error);
     }
 }
-
-window.init = async function init() {
-    var canvas = document.getElementById("canvas");
-    ctx = canvas.getContext("2d");
-    canvas.onmousedown = mousePress;
-
-    try {
-        const response = await fetch('/initialize-game', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken  // CSRFトークンをヘッダーに追加
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`サーバーエラー: ${response.status}`);
-        } 
-        intervalId = setInterval(updateGameBoard, 500);
-    } catch (error) {
-        console.error('エラー:', error);
-    }
-};

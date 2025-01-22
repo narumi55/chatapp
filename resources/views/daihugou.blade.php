@@ -6,7 +6,7 @@
     @vite('resources/css/daihugou4.css')
     <title>大富豪</title>
 </head>
-<body onload="init()">
+<body>
     <div class="container">
         <div>
             <canvas id="canvas" width="830" height="915"></canvas><br>

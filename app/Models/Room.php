@@ -12,6 +12,10 @@ class Room extends Model
     // テーブル名が 'rooms' であることを明示的に指定（通常は不要）
     protected $table = 'rooms';
 
+    protected $casts = [
+        'toggles' => 'array',
+    ];
+
     // マスアサインメントを許可するカラム
     protected $fillable = [
         'pin',

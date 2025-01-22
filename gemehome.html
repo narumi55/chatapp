@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>魔法少女と大富豪</title>
+        <link rel="stylesheet" href="gemehome.css">
+    </head>
+    <body>
+        <header>
+            <h1>魔法少女と大富豪</h1>
+        </header>
+        <main>
+            <button class="main-button" onclick="openSinglePractice()">一人で練習</button><br><br>
+            <button class="main-button" onclick="openRulesSettings()">ルール設定</button>
+        </main>
+        <!-- モーダルウィンドウ -->
+        <div id="rulesModal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeRulesSettings()">&times;</span>
+                <h2>ルール設定</h2>
+                <!-- iframeで他のHTMLを読み込む -->
+                <iframe src="setting4.html" frameborder="0"></iframe>
+            </div>
+        </div>
+    </body>
+    <script src="gemehome.js"></script>
+</html>

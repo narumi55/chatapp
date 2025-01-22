@@ -5,70 +5,60 @@ namespace App\Services;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Models\Game;
 
 class GameService
 {
-    public function initializeGame()
+    public function initializeGame($room)
     {
         Log::info('initializeGame: ゲーム初期化処理開始');
 
-        $getSwitchState = function ($key) {
-            $state = DB::table('switch_states')->where('key', $key)->value('state');
-            return $state === 'on';
-        };
-    
-        // スイッチ状態変数をDBから読み込む
-        $kakumei = false;
-        $suitsibari = $getSwitchState('switch0State');
-        $ranksibari = $getSwitchState('switch1State');
-        $kiri = $getSwitchState('switch2State');
-        $bakku = $getSwitchState('switch3State');
-        $kaesi = $getSwitchState('switch4State');
-        $sukippu = $getSwitchState('switch5State');
-        $watasi = $getSwitchState('switch6State');
-        $sute = $getSwitchState('switch7State');
-        $bonnba = $getSwitchState('switch8State');
+        $pin = $room->pin;
+        $players = [
+            [
+                'name' => $room->host_user_name,
+                'id'   => $room->host_user_id,
+                'hand' => [],
+            ],
+            [
+                'name' => $room->guest_user_name,
+                'id'   => $room->guest_user_id,
+                'hand' => [],
+            ],
+        ];
 
-        // カードデッキの作成
+        $toggles = $room->toggles;
+
+        $settings = [
+            'suitsibari' => ($toggles['switch0State'] ?? 'off') === 'on',
+            'ranksibari' => ($toggles['switch1State'] ?? 'off') === 'on',
+            'kiri'       => ($toggles['switch2State'] ?? 'off') === 'on',
+            'bakku'      => ($toggles['switch3State'] ?? 'off') === 'on',
+            'kaesi'      => ($toggles['switch4State'] ?? 'off') === 'on',
+            'sukippu'    => ($toggles['switch5State'] ?? 'off') === 'on',
+            'watasi'     => ($toggles['switch6State'] ?? 'off') === 'on',
+            'sute'       => ($toggles['switch7State'] ?? 'off'),
+            'bonnba'     => ($toggles['switch8State'] ?? 'off') === 'on',
+        ];
+
+        // カードデッキの作成とシャッフル
         $suits = [0, 1, 2, 3];
         $carddeck = [];
-
         foreach ($suits as $suit) {
             for ($rank = 1; $rank <= 13; $rank++) {
-                $carddeck[] = [
-                    'suit'  => $suit,
-                    'rank'  => $rank,
-                    'count' => 0 // カウントを初期化
-                ];
+                $carddeck[] = ['suit' => $suit, 'rank' => $rank];
             }
         }
-        // ジョーカーの追加
-        $carddeck[] = [
-            'suit'  => 4,
-            'rank'  => 14,
-            'count' => 0 // ジョーカーのカウントを初期化
-        ];
-
-        // シャッフル処理
+        $carddeck[] = ['suit' => 4, 'rank' => 14]; // ジョーカー
         shuffle($carddeck);
-        Log::debug('initializeGame: デッキシャッフル後のカードデッキ', ['carddeck' => $carddeck]);
 
-        // プレイヤーへの配布
-        $players = [
-            ['name' => 'user', 'hand' => []],
-            ['name' => 'cpu1', 'hand' => []],
-            ['name' => 'cpu2', 'hand' => []],
-            ['name' => 'cpu3', 'hand' => []]
-        ];
-
-        // カードをプレイヤーに配布
+        // カードを配布
         $index = 0;
         for ($i = 0; $i < 13; $i++) {
             foreach ($players as &$player) {
                 $player['hand'][] = $carddeck[$index++];
             }
         }
-        Log::debug('initializeGame: カード配布後のプレイヤーデータ', ['players' => $players]);
 
         // 余ったカードをランダムなプレイヤーに追加
         if ($index < count($carddeck)) {
@@ -76,43 +66,44 @@ class GameService
             $players[$randomPlayerIndex]['hand'][] = $carddeck[$index];
         }
 
-        // 初期状態をセッションに保存
-        session([
-            'players'        => $players,
-            'currentPlayer'  => 0,
-            'gameOver'       => false,
-            'kakumei'        => $kakumei,
-            'suitsibari'     => $suitsibari,
-            'ranksibari'     => $ranksibari,
-            'kiri'           => $kiri,
-            'bakku'          => $bakku,
-            'kaesi'          => $kaesi,
-            'sukippu'        => $sukippu,
-            'watasi'         => $watasi,
-            'sute'           => $sute,
-            'bonnba'         => $bonnba
+        // データベースに保存
+        $game = Game::create([
+            'pin'        => $pin,
+            'players'    => json_encode($players),
+            'trash'      => json_encode([]),
+            'game_over'  => false,
+            'kakumei'    => false,
+            'suitsibari' => $settings['suitsibari'],
+            'ranksibari' => $settings['ranksibari'],
+            'kiri'       => $settings['kiri'],
+            'bakku'      => $settings['bakku'],
+            'kaesi'      => $settings['kaesi'],
+            'sukippu'    => $settings['sukippu'],
+            'watasi'     => $settings['watasi'],
+            'sute'       => $settings['sute'],
+            'bonnba'     => $settings['bonnba'],
         ]);
-        Log::info('initializeGame: 初期化完了。gameControl呼び出しへ');
 
-        // 初期化後、ゲーム進行の処理を呼び出し
-        return $this->gameControl();
+        Log::info('initializeGame: 初期化完了。gameControl呼び出しへ', ['game' => $game]);
+
+        return $this->gameControl($pin);
     }
 
-    public function gameControl()
+    public function gameControl($pin)
     {
         Log::info('gameControl: ゲームコントロール処理開始');
-        // セッションからゲーム状態を取得
-        $players = session('players');
-        $currentPlayer = session('currentPlayer');
-        $gameOver = session('gameOver');
+        // データベースからゲーム状態を取得
+        $game = Game::where('pin', $pin)->first();
 
-        // セッションデータの存在確認
-        if (is_null($players) || is_null($currentPlayer) || is_null($gameOver)) {
-            return response()->json([
-                'message' => 'ゲームデータが見つかりません。再度ゲームを初期化してください。',
-                'gameOver' => true
-            ], 400);
+        if (!$game) {
+            // ゲームが見つからない場合のエラー処理
+            abort(404, 'Game not found.');
         }
+
+        // 必要なゲーム状態を変数に格納
+        $players = $game->players; // 配列として取得（モデルの $casts 設定で変換される前提）
+        $playerIndex = $game->playerIndex; // デフォルト値を設定
+        $gameOver = $game->game_over;
 
         if ($gameOver) {
             return response()->json([
@@ -122,7 +113,7 @@ class GameService
         }
 
         // 現在のプレイヤーの処理
-        $currentPlayerData = $players[$currentPlayer] ?? null;
+        $currentPlayerData = $players[$playerIndex] ?? null;
 
         if (is_null($currentPlayerData)) {
             return response()->json([
@@ -131,21 +122,23 @@ class GameService
             ], 400);
         }
 
-        if ($currentPlayerData['name'] === "user") {
-            // ユーザーのターン処理
-            return $this->userTurn();
-        } else {
-            // CPUのターン処理
-            return $this->cpuTurn();
-        }
+        return $this->userTurn($pin);
     }
 
-    private function updateCardCounts()
+    private function updateCardCounts($pin)
     {
-        // 必要なデータをセッションまたは変数から取得
-        $players = Session::get('players');
-        $playerIndex = Session::get('currentPlayer');
-        $trash = Session::get('trash', []);
+        // データベースからゲーム状態を取得
+        $game = Game::where('pin', $pin)->first();
+
+        if (!$game) {
+            // ゲームが見つからない場合のエラー処理
+            abort(404, 'Game not found.');
+        }
+
+        // 必要なデータをデータベースから取得
+        $players = $game->players; // 配列として取得（$casts 設定済み）
+        $playerIndex = $game->playerIndex; // デフォルト値を設定
+        $trash = $game->trash; // デフォルト値として空配列
         
         if (!empty($trash)) {
             $highestTrashRank = max(array_column($trash, 'rank'));
@@ -271,38 +264,45 @@ class GameService
 
         }
 
-        // 更新されたプレイヤー情報とトラッシュをセッションに保存
-        Session::put([
-            'players' => $players,
-
+        $game->update([
+            'players' => $players, // `$casts` により自動で JSON に変換
         ]);
         return $players;
     }
 
-    public function userTurn()
+    public function userTurn($pin)
     {
         Log::info('userTurn: ユーターン処理開始');
        
 
-        // カードのカウントを更新
-        $players = $this->updateCardCounts();
-        $currentPlayer = Session::get('currentPlayer');
-        $trash = Session::get('trash', []);
-        $kakumei    = Session::get('kakumei');
-        $suitsibari = Session::get('suitsibari');
-        $ranksibari = Session::get('ranksibari');
-        $kiri       = Session::get('kiri');
-        $bakku      = Session::get('bakku');
-        $kaesi      = Session::get('kaesi');
-        $sukippu    = Session::get('sukippu');
-        $watasi     = Session::get('watasi');
-        $sute       = Session::get('sute');
-        $bonnba     = Session::get('bonnba');
-        
+        // データベースからゲーム状態を取得
+        $game = Game::where('pin', $pin)->first();
+
+        if (!$game) {
+            // ゲームが見つからない場合のエラー処理
+            abort(404, 'Game not found.');
+        }
+
+        // 必要なデータをデータベースから取得
+        $players = $this->updateCardCounts($pin); // カードカウントを更新する処理
+        $playerIndex = $game->playerIndex; // プレイヤーのインデックス
+        $trash = $game->trash; // 捨て札
+        $kakumei = $game->kakumei;
+        $suitsibari = $game->suitsibari;
+        $ranksibari = $game->ranksibari;
+        $kiri = $game->kiri;
+        $bakku = $game->bakku;
+        $kaesi = $game->kaesi;
+        $sukippu = $game->sukippu;
+        $watasi = $game->watasi;
+        $sute = $game->sute;
+        $bonnba = $game->bonnba;
+
         // レスポンスデータを準備
         $responseData = [
+            'pin'           => $pin,
             'players'       => $players,
-            'currentPlayer' => $currentPlayer,
+            'playerIndex' => $playerIndex,
             'trash'         => $trash,
             'kakumei'       => $kakumei,
             'suitsibari'    => $suitsibari,
@@ -319,8 +319,7 @@ class GameService
         // レスポンスデータをログ出力
         Log::debug('userTurn: レスポンスデータ', $responseData);
 
-        // 準備したデータを返す
-        return $responseData;
+        return response()->json($responseData);
     }
 
     public function turnset($playerIndex, $players, $trash)
@@ -432,9 +431,9 @@ class GameService
         // currentPlayerの設定
         $playerNames = array_column($players, 'name');
         if (in_array($rememberedName, $playerNames)) {
-            $response['currentPlayer'] = ($playerIndex + 1 + $response['sukippuCount']) % count($players);
+            $response['playerIndex'] = ($playerIndex + 1 + $response['sukippuCount']) % count($players);
         } else {
-            $response['currentPlayer'] = ($playerIndex + $response['sukippuCount']) % count($players);
+            $response['playerIndex'] = ($playerIndex + $response['sukippuCount']) % count($players);
         }
 
         return $this->gameControl();

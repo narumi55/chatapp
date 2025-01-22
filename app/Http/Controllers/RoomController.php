@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Room;
+use App\Services\GameService;
 
 class RoomController extends Controller
 {
@@ -13,21 +14,27 @@ class RoomController extends Controller
     {
         $user = Auth::user();
         if (!$user) {
-            return redirect()->route('login')->with('error', 'ログインしてください');
+            return response()->json([
+                'error' => 'Unauthorized',
+                'message' => 'ログインが必要です'
+            ], 401);
         }
 
         // すでに自分のPINを使った部屋がある場合は再利用する or エラーにする等、仕様次第
         // 今回は新たに作る例
         $room = new Room();
         $room->pin = $user->pin;       // ユーザーのpinを部屋のキーとして利用
+        $room->toggles = $user->toggles;
         $room->host_user_id = $user->id;
         $room->host_user_name = $user->name;
         $room->guest_user_id = null;
         $room->guest_user_name = null;
         $room->save();
 
-        return redirect()->route('rooms.show', ['room' => $room->id])
-                     ->with('status', '部屋を立てました');
+        return response()->json([
+            'redirectTo' => route('rooms.show', ['room' => $room->id]),
+            'status' => '部屋を立てました'
+        ]);
     }
 
     public function checkGuest()
@@ -48,6 +55,29 @@ class RoomController extends Controller
         return response()->json(['guest_user_name' => $guest_name]);
     }
 
+    public function startGame(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'ログインしてください');
+        }
+
+        // 自分のpinに紐づいたRoomを取得
+        $room = Room::where('pin', $user->pin)->first();
+        if (!$room) {
+            return redirect()->back()->with('error', 'ルームが見つかりません');
+        }
+
+        // startedフラグをtrueに更新
+        $room->started = true;
+        $room->save();
+
+        // ここでゲーム初期化処理を呼び出す
+        $gameService = new GameService();   // ★ new でインスタンス化
+        $gameService->initializeGame($room);     // ★ ゲーム初期化
+
+        return redirect()->route('daihugou', ['pin' => $room->pin, 'id' => $user->id,]);
+    }
 
     //ゲスト
     public function showJoinForm()
@@ -117,6 +147,8 @@ class RoomController extends Controller
         return response()->json([
             'host_user_name' => $room->host_user_name,
             'guest_user_name' => $room->guest_user_name,
+            'guest_user_id' => $room->guest_user_id,
+            'started' => $room->started
         ]);
     }
 }

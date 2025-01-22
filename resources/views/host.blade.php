@@ -9,6 +9,10 @@
     <h1>ホスト画面</h1>
     <p>参加コード: <strong>{{ Auth::user()->pin }}</strong></p>
     <p>参加メンバー : <strong id="guestNAME">いません</strong></p>
+    <form action="{{ route('rooms.startGame') }}" method="POST">
+        @csrf
+        <button type="submit">始める</button>
+    </form>
 
     <!-- ① Blade でルートをJS変数に埋め込む -->
     <script>

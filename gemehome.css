@@ -1,0 +1,89 @@
+/* ヘッダの背景画像設定 */
+header {
+    background-image: url('header-background.jpg');
+    height: 100px; /* ヘッダの高さ */
+    width: 600px; /* ヘッダの幅 */
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center; /* 中央にタイトルを配置 */
+    position: relative; /* ボタンコンテナの絶対位置指定を可能に */
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* メインの背景画像設定 */
+main {
+    background-image: url('daihugou/魔法背景１.jpeg'); /* メイン用の画像パス */
+    height: 600px;
+    width: 600px;
+    color: white;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column; /* ボタンを縦に並べる */
+    align-items: center; /* 横方向の中央配置 */
+    justify-content: center; /* 縦方向の中央配置 */
+    gap: 20px; /* ボタンの間隔 */
+}
+
+/* ボタンのスタイル */
+.main-button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: white; 
+    color: black; 
+    border: 1px solid black;
+    border-radius: 5px; 
+    cursor: pointer;
+    transition: background-color 0.3s; 
+    transform: scale(1.5);
+}
+
+.main-button:hover {
+    background-color: gray; 
+}
+
+/* モーダルのスタイル */
+.modal {
+    display: none; /* 初期状態は非表示 */
+    position: fixed; /* スクロールしても固定 */
+    z-index: 1000; /* 最前面に表示 */
+    left: 0;
+    top: 0;
+    width: 100%; /* 幅を100%に */
+    height: 100%; /* 高さを100%に */
+    overflow: auto; /* 内容が溢れたらスクロール */
+    background-color: rgba(0, 0, 0, 0.5); /* 背景に半透明の黒を追加 */
+}
+
+.modal-content {
+    background-color: #fefefe; /* モーダルの背景色 */
+    margin: 15% auto; /* 上下の余白、中央寄せ */
+    padding: 20px; /* 内側の余白 */
+    border: 1px solid #888; /* 枠線 */
+    width: 300px; /* 幅を300pxに */
+    height: 500px; /* 高さを500pxに */
+    overflow-y: auto; /* 縦方向にスクロール可能 */
+}
+
+.close {
+    color: #aaa; /* 閉じるボタンの色 */
+    float: right; /* 右寄せ */
+    font-size: 28px; /* フォントサイズ */
+    font-weight: bold; /* 太字 */
+}
+
+.close:hover,
+.close:focus {
+    color: black; /* ホバー時の色 */
+    text-decoration: none; /* 下線を消す */
+    cursor: pointer; /* ポインタに変える */
+}
+
+/* iframeのスタイル */
+iframe {
+    width: 100%; /* 幅を100%に */
+    height: calc(100% - 50px); /* 高さをモーダルの高さからタイトルと余白分を引く */
+    border: none; /* 枠線を消す */
+}

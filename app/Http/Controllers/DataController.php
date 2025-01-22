@@ -16,18 +16,22 @@ class DataController extends Controller
         $this->gameService = $gameService;
     }
 
-    public function initializeGame()
+    public function userTurn(Request $request)
     {
         try {
-            // サービスクラスを呼び出してゲームを初期化
-            $responseData = $this->gameService->initializeGame();
+            // サービスクラスの userTurn() を呼んで結果を取得
+            $responseData = $this->gameService->userTurn();
 
+            // ここで JSON 化して返却
             return response()->json($responseData);
         } catch (\Exception $e) {
-            // エラーハンドリング
+            Log::error('ゲームデータ更新中にエラーが発生:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
-                'message' => '初期化中にエラーが発生しました。',
-                'error'   => $e->getMessage()
+                'status'  => 'ERROR',
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

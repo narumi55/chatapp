@@ -1,0 +1,72 @@
+body {
+  display: flex;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  background-color: white;
+  color: black;
+  border-color: black;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: gray;
+}
+
+.switch_label {
+  position: relative;
+  display: inline-flex; /* 一行で表示 */
+  align-items: center;
+}
+
+input[type='checkbox'] {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.base {
+  width: 56px;
+  border-radius: 15px;
+  height: 32px;
+  background-color: #ddd;
+}
+
+.title {
+  margin-left: 4px;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+}
+
+input:checked ~ .circle {
+  transform: translateX(100%);
+  background-color: blue;
+}
+
+.circle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 12px;
+  background-color: white;
+  transition: 0.5s;
+}
+
+input:checked ~ .base {
+  background-color: rgb(219, 234, 254);
+  transition: 0.5s;
+}
